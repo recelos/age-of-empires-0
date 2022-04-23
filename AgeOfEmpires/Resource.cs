@@ -16,6 +16,12 @@ namespace AgeOfEmpires0
         public uint Amount { get; set; }
         public uint CollectorsAmount { get; set; }
         public void Collect() => Amount += CollectorsAmount;
-        
+
+        public void SubtractCollectors(ref int freeVillagers)
+        {
+            CollectorsAmount--;
+            freeVillagers++;
+        }
+
     }
 }

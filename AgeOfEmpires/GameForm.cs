@@ -18,20 +18,20 @@ namespace AgeOfEmpires0
         /// <summary>
         /// Zmienna zliczająca ilość wieśniaków
         /// </summary>
-        private uint _villagerCounter;
+        private int _villagerCounter;
 
         /// <summary>
         /// Zmienna zliczająca ilość wolnych wieśniaków
         /// </summary>
-        private uint _freeVillagers;
+        private int _freeVillagers;
         /// <summary>
         /// Zmienna przechowująca obecną liczbę populacji
         /// </summary>
-        private uint _currentPopulation;
+        private int _currentPopulation;
         /// <summary>
         /// Zmienna przechowująca maksymalną liczbę populacji
         /// </summary>
-        private uint _maxPopulation;
+        private int _maxPopulation;
 
 
         /// <summary>
@@ -117,6 +117,7 @@ namespace AgeOfEmpires0
             _timeToEnemyAttack = 60;
 
             enemyAttackTimer.Start();
+            updateTimer.Start();
         }
 
 
@@ -128,7 +129,7 @@ namespace AgeOfEmpires0
             InitializeComponent();
             SetInitialValues();
             villagerTextBox.Text = $"{_freeVillagers}/{_villagerCounter}";
-            SetResourcesTextBox();
+            UpdateTextBoxes();
 
             goldCollectorsTextBox.Text = $"{_gold.CollectorsAmount}";
             foodCollectorsTextBox.Text = $"{_food.CollectorsAmount}";
@@ -150,14 +151,13 @@ namespace AgeOfEmpires0
         /// <summary>
         /// Ustawia tekst z informacją o zasobach.
         /// </summary>
-        private void SetResourcesTextBox()
+        private void UpdateTextBoxes()
         {
             goldTextBox.Text = $"{_gold.Amount}";
             foodTextBox.Text = $"{_food.Amount}";
             stoneTextBox.Text = $"{_stone.Amount}";
             woodTextBox.Text = $"{_wood.Amount}";
             ironTextBox.Text = $"{_iron.Amount}";
-
         }
         /// <summary>
         /// Dodaje surowce w zależności od ilości zbierających w interwale 500 ms.
@@ -172,7 +172,7 @@ namespace AgeOfEmpires0
             _stone.Collect();
             _wood.Collect();
             _iron.Collect();
-            SetResourcesTextBox();
+            UpdateTextBoxes();
         }
         /// <summary>
         /// Jeśli jest przynajmniej jeden wieśniak zbierający złoto, zabiera go i
@@ -297,8 +297,7 @@ namespace AgeOfEmpires0
         {
             if (_freeVillagers != 0)
             {
-                _wood.CollectorsAmount++;
-                _freeVillagers--;
+                _wood.SubtractCollectors(ref _freeVillagers);
                 villagerTextBox.Text = $"{_freeVillagers}/{_villagerCounter}";
                 woodCollectorsTextBox.Text = $"{_wood.CollectorsAmount}";
 
@@ -573,6 +572,11 @@ namespace AgeOfEmpires0
                 _timeToEnemyAttack--;
                 enemyAttackLabel.Text = $"Time to next attack: {_timeToEnemyAttack}s";
             }
+        }
+
+        private void UpdateTimer_Tick(object sender, EventArgs e)
+        {
+            UpdateTextBoxes();
         }
     }
 }

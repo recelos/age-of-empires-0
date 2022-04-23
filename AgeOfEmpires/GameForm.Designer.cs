@@ -84,6 +84,7 @@ namespace AgeOfEmpires0
             this.barracksLabel = new System.Windows.Forms.Label();
             this.playerBaseHPLabel = new System.Windows.Forms.Label();
             this.enemyBaseHPLabel = new System.Windows.Forms.Label();
+            this.updateTimer = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.goldPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.foodPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.stonePictureBox)).BeginInit();
@@ -632,6 +633,11 @@ namespace AgeOfEmpires0
             this.enemyBaseHPLabel.TabIndex = 56;
             this.enemyBaseHPLabel.Text = "enemyBaseHPLabel";
             // 
+            // updateTimer
+            // 
+            this.updateTimer.Interval = 50;
+            this.updateTimer.Tick += new System.EventHandler(this.UpdateTimer_Tick);
+            // 
             // GameForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -762,6 +768,7 @@ namespace AgeOfEmpires0
         private System.Windows.Forms.Label barracksLabel;
         private System.Windows.Forms.Label playerBaseHPLabel;
         private System.Windows.Forms.Label enemyBaseHPLabel;
+        private System.Windows.Forms.Timer updateTimer;
     }
 }
 
