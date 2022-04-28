@@ -1,37 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Net.Http.Headers;
-using System.Security.Cryptography.Pkcs;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using AgeOfEmpires0;
 
 namespace AgeOfEmpires0
 {
     public partial class GameForm : Form
     {
-        /// <summary>
-        /// Zmienna zliczająca ilość wieśniaków
-        /// </summary>
-        private int _villagerCounter;
 
         /// <summary>
-        /// Zmienna zliczająca ilość wolnych wieśniaków
+        /// Obiekt obsługujący populację w oraz osadników
         /// </summary>
-        private int _freeVillagers;
-        /// <summary>
-        /// Zmienna przechowująca obecną liczbę populacji
-        /// </summary>
-        private int _currentPopulation;
-        /// <summary>
-        /// Zmienna przechowująca maksymalną liczbę populacji
-        /// </summary>
-        private int _maxPopulation;
+        private PopulationHandler _popHandler;
 
 
         /// <summary>
@@ -62,15 +40,15 @@ namespace AgeOfEmpires0
         /// <summary>
         /// Zmienna przechowująca ilość piechoty
         /// </summary>
-        private uint _infantry;
+        private int _infantry;
         /// <summary>
         /// Zmienna przechowująca ilość kawalerii
         /// </summary>
-        private uint _cavalry;
+        private int _cavalry;
         /// <summary>
         /// Zmienna przechowująca ilość katapult
         /// </summary>
-        private uint _catapults;
+        private int _catapults;
 
         /// <summary>
         /// Zmienna przechowująca punkty życua bazy przeciwnika
@@ -92,11 +70,8 @@ namespace AgeOfEmpires0
         /// </summary>
         private void SetInitialValues()
         {
-            _villagerCounter = 3;
-            _freeVillagers = 3;
+            _popHandler = new PopulationHandler();
 
-            _currentPopulation = 3;
-            _maxPopulation = 10;
 
             _infantry = 0;
             _cavalry = 0;
@@ -128,7 +103,9 @@ namespace AgeOfEmpires0
         {
             InitializeComponent();
             SetInitialValues();
-            villagerTextBox.Text = $"{_freeVillagers}/{_villagerCounter}";
+            //villagerTextBox.Text = $"{_freeVillagers}/{_villagerCounter}";
+            villagerTextBox.Text = $"{_popHandler.FreeVillagers}/{_popHandler.FreeVillagers}";
+
             UpdateTextBoxes();
 
             goldCollectorsTextBox.Text = $"{_gold.CollectorsAmount}";
@@ -136,7 +113,7 @@ namespace AgeOfEmpires0
             stoneCollectorsTextBox.Text = $"{_stone.CollectorsAmount}";
             woodCollectorsTextBox.Text = $"{_wood.CollectorsAmount}";
             ironCollectorsTextBox.Text = $"{_iron.CollectorsAmount}";
-            populationTextBox.Text = $"{_currentPopulation} / {_maxPopulation}";
+            populationTextBox.Text = $"{_popHandler.CurrentPopulation} / {_popHandler.MaxPopulation}";
             infantryTextBox.Text = _infantry.ToString();
             cavalryTextBox.Text = _cavalry.ToString();
             artilleryTextBox.Text = _catapults.ToString();
@@ -144,8 +121,6 @@ namespace AgeOfEmpires0
 
             playerBaseHPLabel.Text = $"Player base HP: {_playerBaseHP}";
             enemyBaseHPLabel.Text = $"Enemy base HP: {_enemyBaseHP}";
-
-
         }
 
         /// <summary>
@@ -172,170 +147,96 @@ namespace AgeOfEmpires0
             _stone.Collect();
             _wood.Collect();
             _iron.Collect();
-            UpdateTextBoxes();
         }
-        /// <summary>
-        /// Jeśli jest przynajmniej jeden wieśniak zbierający złoto, zabiera go i
-        /// dodaje do puli wolnych wieśniaków.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void SubtractGoldCollectorButton_Click(object sender, EventArgs e)
-        {
-            if (_gold.CollectorsAmount!=0)
-            {
-                _gold.CollectorsAmount--;
-                _freeVillagers++;
-                villagerTextBox.Text = $"{_freeVillagers}/{_villagerCounter}";
-                goldCollectorsTextBox.Text = $"{_gold.CollectorsAmount}";
-            }
-        }
+
+        #region AddButtonClicks
         /// <summary>
         /// Dodaje jednego zbierającego złoto jeśli jest dostępny wolny wieśniak.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void AddGoldCollectorButton_Click(object sender, EventArgs e)
-        {
-            if (_freeVillagers != 0)
-            {
-                _gold.CollectorsAmount++;
-                _freeVillagers--;
-                villagerTextBox.Text = $"{_freeVillagers}/{_villagerCounter}";
-                goldCollectorsTextBox.Text = $"{_gold.CollectorsAmount}";
+        private void AddGoldCollectorButton_Click(object sender, EventArgs e) =>
+            IncreaseCollectorsButtonClick(_gold, goldCollectorsTextBox);
 
-            }
-        }
-        /// <summary>
-        /// Jeśli jest przynajmniej jeden wieśniak zbierający jedzenie, zabiera go i
-        /// dodaje do puli wolnych wieśniaków.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void SubtractFoodCollectorsButton_Click(object sender, EventArgs e)
-        {
-            if (_food.CollectorsAmount != 0)
-            {
-                _food.CollectorsAmount--;
-                _freeVillagers++;
-                villagerTextBox.Text = $"{_freeVillagers}/{_villagerCounter}";
-                foodCollectorsTextBox.Text = $"{_food.CollectorsAmount}";
-            }
-        }
         /// <summary>
         /// Dodaje jednego zbierającego jedzenie jeśli jest dostępny wolny wieśniak.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void AddFoodCollectorsButton_Click(object sender, EventArgs e)
-        {
-            if (_freeVillagers != 0)
-            {
-                _food.CollectorsAmount++;
-                _freeVillagers--;
-                villagerTextBox.Text = $"{_freeVillagers}/{_villagerCounter}";
-                foodCollectorsTextBox.Text = $"{_food.CollectorsAmount}";
+            => IncreaseCollectorsButtonClick(_food, foodCollectorsTextBox);
 
-            }
-        }
+        /// <summary>
+        /// Dodaje jednego zbierającego drewno jeśli jest dostępny wolny wieśniak.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void AddWoodCollectorsButton_Click(object sender, EventArgs e) =>
+            IncreaseCollectorsButtonClick(_wood, woodCollectorsTextBox);
+
+        /// <summary>
+        /// Dodaje jednego zbierającego kamień jeśli jest dostępny wolny wieśniak.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void AddStoneCollectorsButton_Click(object sender, EventArgs e) =>
+            IncreaseCollectorsButtonClick(_stone, stoneCollectorsTextBox);
+
+        /// <summary>
+        /// Dodaje jednego zbierającego żelazo jeśli jest dostępny wolny wieśniak.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void AddIronCollectorsButton_Click(object sender, EventArgs e) =>
+            IncreaseCollectorsButtonClick(_iron, ironCollectorsTextBox);
+        #endregion
+        #region SubtractButtonClicks
+        /// <summary>
+        /// Jeśli jest przynajmniej jeden wieśniak zbierający złoto, zabiera go i
+        /// dodaje do puli wolnych wieśniaków.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SubtractGoldCollectorButton_Click(object sender, EventArgs e) =>
+            DecreaseCollectorsButtonClick(_gold, goldCollectorsTextBox);
+
+        /// <summary>
+        /// Jeśli jest przynajmniej jeden wieśniak zbierający jedzenie, zabiera go i
+        /// dodaje do puli wolnych wieśniaków.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SubtractFoodCollectorsButton_Click(object sender, EventArgs e) =>
+            DecreaseCollectorsButtonClick(_food, foodCollectorsTextBox);
+
         /// <summary>
         /// Jeśli jest przynajmniej jeden wieśniak zbierający kamień, zabiera go i
         /// dodaje do puli wolnych wieśniaków.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void SubtractStoneCollectorsButton_Click(object sender, EventArgs e)
-        {
-            if (_stone.CollectorsAmount != 0)
-            {
-                _stone.CollectorsAmount--;
-                _freeVillagers++;
-                villagerTextBox.Text = $"{_freeVillagers}/{_villagerCounter}";
-                stoneCollectorsTextBox.Text = $"{_stone.CollectorsAmount}";
-            }
-        }
-        /// <summary>
-        /// Dodaje jednego zbierającego kamień jeśli jest dostępny wolny wieśniak.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void AddStoneCollectorsButton_Click(object sender, EventArgs e)
-        {
-            if (_freeVillagers != 0)
-            {
-                _stone.CollectorsAmount++;
-                _freeVillagers--;
-                villagerTextBox.Text = $"{_freeVillagers}/{_villagerCounter}";
-                stoneCollectorsTextBox.Text = $"{_stone.CollectorsAmount}";
+        private void SubtractStoneCollectorsButton_Click(object sender, EventArgs e) =>
+            DecreaseCollectorsButtonClick(_stone, stoneCollectorsTextBox);
 
-            }
-        }
         /// <summary>
         /// Jeśli jest przynajmniej jeden wieśniak zbierający drewno, zabiera go i
         /// dodaje do puli wolnych wieśniaków.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void SubtractWoodCollectorsButton_Click(object sender, EventArgs e)
-        {
-            {
-                if (_wood.CollectorsAmount != 0)
-                {
-                    _wood.CollectorsAmount--;
-                    _freeVillagers++;
-                    villagerTextBox.Text = $"{_freeVillagers}/{_villagerCounter}";
-                    woodCollectorsTextBox.Text = $"{_wood.CollectorsAmount}";
-                }
-            }
-        }
-        /// <summary>
-        /// Dodaje jednego zbierającego drewno jeśli jest dostępny wolny wieśniak.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void AddWoodCollectorsButton_Click(object sender, EventArgs e)
-        {
-            if (_freeVillagers != 0)
-            {
-                _wood.SubtractCollectors(ref _freeVillagers);
-                villagerTextBox.Text = $"{_freeVillagers}/{_villagerCounter}";
-                woodCollectorsTextBox.Text = $"{_wood.CollectorsAmount}";
+        private void SubtractWoodCollectorsButton_Click(object sender, EventArgs e) =>
+            DecreaseCollectorsButtonClick(_wood, woodCollectorsTextBox);
 
-            }
-        }
         /// <summary>
         /// Jeśli jest przynajmniej jeden wieśniak zbierający żelazo, zabiera go i
         /// dodaje do puli wolnych wieśniaków.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void SubtractIronCollectorsButton_Click(object sender, EventArgs e)
-        {
-            if (_iron.CollectorsAmount != 0) 
-            { 
-                _iron.CollectorsAmount--; 
-                _freeVillagers++; 
-                villagerTextBox.Text = $"{_freeVillagers}/{_villagerCounter}"; 
-                ironCollectorsTextBox.Text = $"{_iron.CollectorsAmount}";
-            }
-            
-        }
-        /// <summary>
-        /// Dodaje jednego zbierającego żelazo jeśli jest dostępny wolny wieśniak.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void AddIronCollectorsButton_Click(object sender, EventArgs e)
-        {
-            if (_freeVillagers != 0)
-            {
-                _iron.CollectorsAmount++;
-                _freeVillagers--;
-                villagerTextBox.Text = $"{_freeVillagers}/{_villagerCounter}";
-                ironCollectorsTextBox.Text = $"{_iron.CollectorsAmount}";
+        private void SubtractIronCollectorsButton_Click(object sender, EventArgs e) =>
+            DecreaseCollectorsButtonClick(_iron, ironCollectorsTextBox);
+        #endregion
 
-            }
-        }
         /// <summary>
         /// Tworzy nowego wieśniaka i dodaje wolnego wieśniaka jeśli posiadana jest odpowiednia ilość
         /// surowca.
@@ -348,14 +249,14 @@ namespace AgeOfEmpires0
             {
                 DisplayNotEnoughResourcesLabel();
             } 
-            else if (_currentPopulation < _maxPopulation)
+            else if (_popHandler.CurrentPopulation < _popHandler.MaxPopulation)
             {
                 _food.Amount -= 50;
-                _currentPopulation++;
-                _villagerCounter++;
-                _freeVillagers++;
-                villagerTextBox.Text = $"{_freeVillagers}/{_villagerCounter}";
-                populationTextBox.Text = $"{_currentPopulation} / {_maxPopulation}";
+                _popHandler.CurrentPopulation++;
+                _popHandler.AllVillagers++;
+                _popHandler.FreeVillagers++;
+                villagerTextBox.Text = $"{_popHandler.FreeVillagers}/{_popHandler.AllVillagers}";
+                populationTextBox.Text = $"{_popHandler.CurrentPopulation} / {_popHandler.MaxPopulation}";
             }
         }
         /// <summary>
@@ -370,11 +271,11 @@ namespace AgeOfEmpires0
             {
                 DisplayNotEnoughResourcesLabel();
             }
-            else if (_maxPopulation < 200)
+            else if (_popHandler.MaxPopulation < 200)
             {
                 _wood.Amount -= 100;
-                _maxPopulation += 10;
-                populationTextBox.Text = $"{_currentPopulation} / {_maxPopulation}";
+                _popHandler.MaxPopulation += 10;
+                populationTextBox.Text = $"{_popHandler.CurrentPopulation} / {_popHandler.MaxPopulation}";
             }
         }
         /// <summary>
@@ -389,14 +290,14 @@ namespace AgeOfEmpires0
             {
                 DisplayNotEnoughResourcesLabel();
             }
-            else if (_currentPopulation < _maxPopulation)
+            else if (_popHandler.CurrentPopulation < _popHandler.MaxPopulation)
             {
                 _gold.Amount -= 50;
                 _iron.Amount -= 100;
-                _currentPopulation++;
+                _popHandler.CurrentPopulation++;
                 _infantry++;
                 infantryTextBox.Text = _infantry.ToString();
-                populationTextBox.Text = $"{_currentPopulation} / {_maxPopulation}";
+                populationTextBox.Text = $"{_popHandler.CurrentPopulation} / {_popHandler.MaxPopulation}";
             }
         }
         /// <summary>
@@ -411,14 +312,14 @@ namespace AgeOfEmpires0
             {
                 DisplayNotEnoughResourcesLabel();
             }
-            else if (_currentPopulation < _maxPopulation - 1)
+            else if (_popHandler.CurrentPopulation < _popHandler.MaxPopulation - 1)
             {
                 _food.Amount -= 50;
                 _gold.Amount -= 100;
-                _currentPopulation += 2;
+                _popHandler.CurrentPopulation += 2;
                 _cavalry++;
                 cavalryTextBox.Text = _cavalry.ToString();
-                populationTextBox.Text = $"{_currentPopulation} / {_maxPopulation}";
+                populationTextBox.Text = $"{_popHandler.CurrentPopulation} / {_popHandler.MaxPopulation}";
             }
         }
         /// <summary>
@@ -433,15 +334,15 @@ namespace AgeOfEmpires0
             {
                 DisplayNotEnoughResourcesLabel();
             }
-            else if (_currentPopulation < _maxPopulation - 2)
+            else if (_popHandler.CurrentPopulation < _popHandler.MaxPopulation - 2)
             {
                 _gold.Amount -= 50;
                 _wood.Amount -= 100;
                 _stone.Amount -= 50;
-                _currentPopulation += 3;
+                _popHandler.CurrentPopulation += 3;
                 _catapults++;
                 artilleryTextBox.Text = _catapults.ToString();
-                populationTextBox.Text = $"{_currentPopulation} / {_maxPopulation}";
+                populationTextBox.Text = $"{_popHandler.CurrentPopulation} / {_popHandler.MaxPopulation}";
             }
         }
         /// <summary>
@@ -517,12 +418,12 @@ namespace AgeOfEmpires0
                 Close();
                 return;
             }
-            _enemyBaseHP -= (int)damage;
+            _enemyBaseHP -= damage;
           
 
             // zwalnia w miejsce w populacji po ataku
             var populationToDelete = _infantry + _cavalry * 2 + _catapults * 3;
-            _currentPopulation -= populationToDelete;
+            _popHandler.CurrentPopulation -= populationToDelete;
 
 
             enemyBaseProgressBar.Value = _enemyBaseHP;
@@ -531,7 +432,7 @@ namespace AgeOfEmpires0
             _cavalry = 0;
             _catapults = 0;
 
-            populationTextBox.Text = $"{_currentPopulation} / {_maxPopulation}";
+            populationTextBox.Text = $"{_popHandler.CurrentPopulation} / {_popHandler.MaxPopulation}";
             infantryTextBox.Text = _infantry.ToString();
             cavalryTextBox.Text = _cavalry.ToString();
             artilleryTextBox.Text = _cavalry.ToString();
@@ -577,6 +478,28 @@ namespace AgeOfEmpires0
         private void UpdateTimer_Tick(object sender, EventArgs e)
         {
             UpdateTextBoxes();
+        }
+
+        private void IncreaseCollectorsButtonClick(Resource res, TextBox textBox)
+        {
+            if (_popHandler.FreeVillagers != 0)
+            {
+                res.CollectorsAmount++;
+                _popHandler.FreeVillagers--;
+                villagerTextBox.Text = $"{_popHandler.FreeVillagers}/{_popHandler.AllVillagers}";
+                textBox.Text = $"{res.CollectorsAmount}";
+            }
+        }
+
+        private void DecreaseCollectorsButtonClick(Resource res, TextBox textBox)
+        {
+            if (res.CollectorsAmount != 0)
+            {
+                res.CollectorsAmount--;
+                _popHandler.FreeVillagers++;
+                villagerTextBox.Text = $"{_popHandler.FreeVillagers}/{_popHandler.AllVillagers}";
+                textBox.Text = $"{res.CollectorsAmount}";
+            }
         }
     }
 }

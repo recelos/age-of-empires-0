@@ -6,22 +6,18 @@ using System.Threading.Tasks;
 
 namespace AgeOfEmpires0
 {
-    public struct Resource
+    public class Resource
     {
-        public Resource(uint initialAmount)
+        public Resource(int initialAmount)
         {
             CollectorsAmount = 0;
             Amount = initialAmount;
         }
-        public uint Amount { get; set; }
-        public uint CollectorsAmount { get; set; }
+        public int Amount { get; set; }
+        public int CollectorsAmount { get; set; }
         public void Collect() => Amount += CollectorsAmount;
-
-        public void SubtractCollectors(ref int freeVillagers)
-        {
-            CollectorsAmount--;
-            freeVillagers++;
-        }
+        public void IncreaseCollectors() => CollectorsAmount++;
+        public void SubtractCollectors() => CollectorsAmount--;
 
     }
 }
